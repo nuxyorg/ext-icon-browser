@@ -3,6 +3,7 @@
   "name": "Icon Browser",
   "version": "1.0.0",
   "type": "tool",
+  "category": "developer",
   "icon": "search",
   "permissions": ["network", "clipboard"],
   "capabilities": {
