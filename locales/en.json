@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "Icon Browser"
+  },
+  "search": {
+    "placeholder": "Search icons"
+  },
+  "actions": {
+    "copyName": "Copy name",
+    "copySvg": "Copy SVG"
+  },
+  "toast": {
+    "copiedName": "Copied \"{name}\"",
+    "copiedSvg": "Copied SVG for \"{name}\""
+  },
+  "status": {
+    "loading": "Loading…",
+    "noMatches": "No matches for \"{query}\"",
+    "count": "{shown} / {total} icons"
+  }
+}

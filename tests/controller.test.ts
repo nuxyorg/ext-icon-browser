@@ -16,7 +16,25 @@ vi.mock('@nuxyorg/core', async () => {
   return (await hoisted).createNuxyCoreMock(actual as Record<string, unknown>)
 })
 
+import { flattenTranslations } from '@nuxyorg/core'
 import { IconBrowserController } from '../controller.ts'
+import en from '../locales/en.json'
+
+const EN = flattenTranslations(en as never)
+const flush = () => new Promise((r) => setTimeout(r, 0))
+
+/** IPC mock that serves translations and hands every other call to `impl`. */
+function routed(impl: (...args: unknown[]) => Promise<unknown>, translations = EN) {
+  return vi.fn(async (ext: string, channel: string, payload?: unknown) =>
+    channel === 'getExtensionTranslations'
+      ? { success: true, data: { locale: 'en', dir: 'ltr', translations } }
+      : impl(ext, channel, payload)
+  )
+}
+
+/** Calls other than the translation fetch. */
+const toolCalls = (invoke: ReturnType<typeof vi.fn>) =>
+  invoke.mock.calls.filter((c) => c[1] !== 'getExtensionTranslations')
 
 describe('IconBrowserController.setQuery', () => {
   it('filters icons case-insensitively and resets the active index', () => {
@@ -45,10 +63,11 @@ describe('IconBrowserController.copyActiveName', () => {
   })
 
   it('invokes copyIconName for the active icon and shows a toast', async () => {
-    const invoke = vi.fn().mockResolvedValue({ success: true })
+    const invoke = routed(async () => ({ success: true }))
     ;(window as any).core.ipc.invoke = invoke
 
     const controller = new IconBrowserController(() => {})
+    await flush()
     controller.store.setState({ filtered: ['home', 'search'], activeIndex: 1 })
 
     await controller.copyActiveName()
@@ -63,7 +82,7 @@ describe('IconBrowserController.copyActiveName', () => {
   })
 
   it('does nothing when no icon is active', async () => {
-    const invoke = vi.fn()
+    const invoke = routed(async () => undefined)
     ;(window as any).core.ipc.invoke = invoke
 
     const controller = new IconBrowserController(() => {})
@@ -71,7 +90,7 @@ describe('IconBrowserController.copyActiveName', () => {
 
     await controller.copyActiveName()
 
-    expect(invoke).not.toHaveBeenCalled()
+    expect(toolCalls(invoke)).toEqual([])
   })
 })
 
@@ -82,10 +101,11 @@ describe('IconBrowserController.copyActiveSvg', () => {
   })
 
   it('invokes copyIconSvg with the cached SVG markup and shows a toast', async () => {
-    const invoke = vi.fn().mockResolvedValue({ success: true })
+    const invoke = routed(async () => ({ success: true }))
     ;(window as any).core.ipc.invoke = invoke
 
     const controller = new IconBrowserController(() => {})
+    await flush()
     controller.store.setState({ filtered: ['home', 'search'], activeIndex: 1 })
     controller.svgCache.set('search', '<svg id="search"></svg>')
 
@@ -101,7 +121,7 @@ describe('IconBrowserController.copyActiveSvg', () => {
   })
 
   it('does nothing when the active icon has no cached SVG', async () => {
-    const invoke = vi.fn()
+    const invoke = routed(async () => undefined)
     ;(window as any).core.ipc.invoke = invoke
 
     const controller = new IconBrowserController(() => {})
@@ -109,7 +129,7 @@ describe('IconBrowserController.copyActiveSvg', () => {
 
     await controller.copyActiveSvg()
 
-    expect(invoke).not.toHaveBeenCalled()
+    expect(toolCalls(invoke)).toEqual([])
   })
 })
 
@@ -128,5 +148,16 @@ describe('IconBrowserController.getKeyActions', () => {
 
     controller.store.setState({ activeIndex: 0 })
     expect(enter!.activeOn?.()).toBe(true)
+  })
+})
+
+describe('IconBrowserController i18n', () => {
+  it('takes its key action labels from the locale files', async () => {
+    const marked = Object.fromEntries(Object.entries(EN).map(([k, v]) => [k, `⟦${v}⟧`]))
+    ;(window as any).core.ipc.invoke = routed(async () => undefined, marked)
+    const controller = new IconBrowserController(() => {})
+    await flush()
+    const labels = controller.getKeyActions().map((a) => a.label)
+    expect(labels).toEqual(['⟦Copy name⟧', '⟦Copy SVG⟧'])
   })
 })

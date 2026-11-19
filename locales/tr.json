@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "Simge Tarayıcı"
+  },
+  "search": {
+    "placeholder": "Simge ara"
+  },
+  "actions": {
+    "copyName": "Adı kopyala",
+    "copySvg": "SVG kopyala"
+  },
+  "toast": {
+    "copiedName": "\"{name}\" kopyalandı",
+    "copiedSvg": "\"{name}\" için SVG kopyalandı"
+  },
+  "status": {
+    "loading": "Yükleniyor…",
+    "noMatches": "\"{query}\" için sonuç yok",
+    "count": "{shown} / {total} simge"
+  }
+}

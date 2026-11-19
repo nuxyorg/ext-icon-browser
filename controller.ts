@@ -1,4 +1,4 @@
-import { createStore, type Store } from '@nuxyorg/extension-sdk'
+import { BaseExtensionController, setToolSearchPlaceholder } from '@nuxyorg/extension-sdk'
 import type { ShellAction } from '@nuxyorg/core'
 
 const EXT_ID = 'com.nuxy.icon-browser'
@@ -11,31 +11,33 @@ export interface IconBrowserState {
   activeIndex: number
 }
 
-export class IconBrowserController {
-  readonly store: Store<IconBrowserState>
+export class IconBrowserController extends BaseExtensionController<IconBrowserState> {
   readonly svgCache = new Map<string, string>()
 
-  constructor(private onUpdate: () => void) {
-    this.store = createStore<IconBrowserState>({
-      icons: [],
-      filtered: [],
-      query: '',
-      ready: false,
-      activeIndex: -1,
-    })
-    this.store.subscribe(() => this.onUpdate())
+  constructor(onUpdate: () => void) {
+    super(EXT_ID, { icons: [], filtered: [], query: '', ready: false, activeIndex: -1 }, onUpdate)
   }
 
-  get state(): IconBrowserState {
-    return this.store.getState()
+  syncSearchPlaceholder(): void {
+    setToolSearchPlaceholder(this.t.t, 'search.placeholder')
   }
 
   connect(): void {
+    this.syncSearchPlaceholder()
     void this.load()
   }
 
   disconnect(): void {
-    // no-op — grid owns keyboard registration
+    // The grid owns keyboard registration; only the translator needs cleanup.
+    this.t.destroy()
+  }
+
+  /** Status-bar text: loading, or "shown / total icons". */
+  footerText(): string {
+    const { ready, filtered, icons } = this.state
+    return ready
+      ? this.t.t('status.count', { shown: filtered.length, total: icons.length })
+      : this.t.t('status.loading')
   }
 
   private activeName(): string | null {
@@ -52,7 +54,7 @@ export class IconBrowserController {
       | null
       | undefined
     if (res?.success) {
-      window.UI?.toast?.(`Copied "${name}"`, { type: 'success' })
+      window.UI?.toast?.(this.t.t('toast.copiedName', { name }), { type: 'success' })
     }
   }
 
@@ -66,7 +68,7 @@ export class IconBrowserController {
       | null
       | undefined
     if (res?.success) {
-      window.UI?.toast?.(`Copied SVG for "${name}"`, { type: 'success' })
+      window.UI?.toast?.(this.t.t('toast.copiedSvg', { name }), { type: 'success' })
     }
   }
 
@@ -74,7 +76,7 @@ export class IconBrowserController {
     return [
       {
         key: 'Enter',
-        label: 'Copy name',
+        label: this.t.t('actions.copyName'),
         hint: '↵',
         activeOn: () => this.activeName() !== null,
         handler: () => {
@@ -84,7 +86,7 @@ export class IconBrowserController {
       {
         key: 'Enter',
         modifiers: ['shift'],
-        label: 'Copy SVG',
+        label: this.t.t('actions.copySvg'),
         hint: ['⇧', '↵'],
         activeOn: () => this.activeName() !== null,
         handler: () => {

@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "アイコンブラウザー"
+  },
+  "search": {
+    "placeholder": "アイコンを検索"
+  },
+  "actions": {
+    "copyName": "名前をコピー",
+    "copySvg": "SVG をコピー"
+  },
+  "toast": {
+    "copiedName": "「{name}」をコピーしました",
+    "copiedSvg": "「{name}」の SVG をコピーしました"
+  },
+  "status": {
+    "loading": "読み込み中…",
+    "noMatches": "「{query}」に一致するものはありません",
+    "count": "{shown} / {total} 個のアイコン"
+  }
+}

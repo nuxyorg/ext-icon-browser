@@ -14,5 +14,9 @@
     "backend": "backend.ts",
     "frontend": "frontend.ts",
     "element": "nuxy-tool-icon-browser"
+  },
+  "locales": {
+    "default": "en",
+    "supported": ["en", "tr", "ja"]
   }
 }

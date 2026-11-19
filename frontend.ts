@@ -129,24 +129,18 @@ export class NuxyToolIconBrowserElement extends LitElement implements NuxyToolEl
     void this.controller?.copyActiveName()
   }
 
-  private _footerText(): string {
-    const s = this.controller?.state
-    if (!s) return ''
-    if (s.ready) return `${s.filtered.length} / ${s.icons.length} icons`
-    return 'Loading…'
-  }
-
   render() {
     if (!this.controller) return nothing
     const { filtered, ready, query, activeIndex } = this.controller.state
+    const t = this.controller.t.t
     const trimmedQuery = query.trim()
 
     return html`
-      <span class="footer-portal" ${ref(this.onFooterRef)}>${this._footerText()}</span>
+      <span class="footer-portal" ${ref(this.onFooterRef)}>${this.controller.footerText()}</span>
       ${!ready
-        ? html`<div class="empty">Loading…</div>`
+        ? html`<div class="empty">${t('status.loading')}</div>`
         : trimmedQuery && filtered.length === 0
-          ? html`<div class="empty">No matches for "${trimmedQuery}"</div>`
+          ? html`<div class="empty">${t('status.noMatches', { query: trimmedQuery })}</div>`
           : html`
               <div class="scroll">
                 <nuxy-grid
